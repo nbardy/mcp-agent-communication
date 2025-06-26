@@ -1,6 +1,6 @@
 import net from 'net';
 import readline from 'readline';
-import { dispatch } from './bank.ts';
+import { dispatch } from './bank';
 
 export const startServer = (port = 4545) => {
   const server = net.createServer((sock) => {

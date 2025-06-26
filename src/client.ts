@@ -1,6 +1,6 @@
 import net from 'net';
 import readline from 'readline';
-import { Request, Resp } from './types.ts';
+import { Request, Resp } from './types';
 
 export class MCPClient {
   private rl: readline.Interface;

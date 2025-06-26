@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { randomUUID } from 'crypto';
 import {
   Message, PutReq, ListReq, ReadReq, GatherReq, Resp
-} from './types.ts';
+} from './types';
 
 // Single global store (swap for DB if desired)
 const messages: Message[] = [];

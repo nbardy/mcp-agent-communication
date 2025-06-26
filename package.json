@@ -22,12 +22,12 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/mcp-agent-communication.git"
+    "url": "git+https://github.com/nbardy/mcp-agent-communication.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/mcp-agent-communication/issues"
+    "url": "https://github.com/nbardy/mcp-agent-communication/issues"
   },
-  "homepage": "https://github.com/yourusername/mcp-agent-communication#readme",
+  "homepage": "https://github.com/nbardy/mcp-agent-communication#readme",
   "type": "module",
   "devDependencies": {
     "@types/node": "^24.0.4",
