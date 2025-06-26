@@ -1,17 +1,116 @@
-# MCP Agent Communication
+# MCP Agent Communication Server
 
-A TypeScript implementation of a Message Communication Protocol (MCP) for coordinating autonomous agents. This system enables asynchronous communication between software agents using a simple TCP-based message queue.
+An MCP (Model Context Protocol) server that enables agent communication and message coordination through Claude Desktop and other MCP-compatible clients.
+
+## Installation
+
+```bash
+npm install mcp-agent-communication
+```
 
 ## Overview
 
-The MCP system provides a lightweight coordination layer for autonomous agents to communicate progress, gather information, and synchronize workflows. Agents communicate via JSON messages over TCP sockets, using a simple verb-based DSL.
+This MCP server provides a communication layer for autonomous agents to coordinate work, share progress updates, and synchronize workflows. It exposes your agent communication functionality as standard MCP tools that can be used directly in Claude Desktop.
 
 ## Quick Start
 
+### As an MCP Server for Claude Desktop
+
+1. Install and build:
 ```bash
 npm install
-npx tsx src/demo.ts
+npm run build
 ```
+
+2. Add to your Claude Desktop MCP settings:
+```json
+{
+  "mcpServers": {
+    "mcp-agent-communication": {
+      "command": "node",
+      "args": ["/full/path/to/mcp-agent-communication/dist/mcp-server.js"]
+    }
+  }
+}
+```
+
+3. Restart Claude Desktop
+
+### As a Development Tool
+
+```bash
+npm install
+npx tsx src/demo.ts  # Run the original TCP-based demo
+```
+
+## MCP Tools Available
+
+Once configured, you'll have access to these tools in Claude:
+
+### `put_message`
+Store a message in the agent communication bank
+- **description**: Human-readable description
+- **agent_id**: ID of the agent sending the message  
+- **tags**: Array of tags for categorizing
+- **content**: The message content (any type)
+
+### `list_messages`
+List messages from the communication bank
+- **agent_ids** (optional): Filter by specific agent IDs
+- **tags** (optional): Filter by specific tags
+
+### `read_messages`
+Read messages since a timestamp
+- **agent_ids** (optional): Filter by specific agent IDs
+- **tags** (optional): Filter by specific tags
+- **since** (optional): Timestamp to read messages since (epoch ms)
+
+### `gather_messages`
+Wait for specific messages from specific agents
+- **agent_ids**: Required agent IDs to wait for
+- **tags**: Required tags to wait for
+- **timeout** (optional): Timeout in seconds (default: 10)
+
+## Communication Patterns
+
+### How Agents Communicate
+
+**Engineers** should:
+- Put frequent progress updates using `put_message`
+- Use descriptive tags like `"start"`, `"update"`, `"finish"`, `"blocked"`
+- Include relevant work artifacts in the `content` field
+- Use `gather_messages` to wait for PM feedback
+
+**Project Managers** should:
+- Use `gather_messages` to wait for engineer milestones
+- Provide timely feedback using `put_message` with `"review"` tags
+- Monitor overall project progress with `list_messages` and `read_messages`
+
+### Example Usage in Claude
+
+```
+Put a start message:
+Tool: put_message
+- description: "Starting work on authentication feature"
+- agent_id: "alice"
+- tags: ["start"]
+- content: {"feature": "auth", "estimated_hours": 8}
+
+Wait for completion from multiple agents:
+Tool: gather_messages
+- agent_ids: ["alice", "bob", "carol"]
+- tags: ["finish"]
+- timeout: 300
+
+List recent updates:
+Tool: read_messages
+- tags: ["update"]
+- since: 1640995200000
+```
+
+## Legacy TCP Protocol
+
+The original TCP-based protocol is still available for backwards compatibility:
 
 ## Architecture
 
