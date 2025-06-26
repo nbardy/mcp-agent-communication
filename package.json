@@ -1,9 +1,14 @@
 {
   "name": "mcp-agent-communication",
   "version": "1.0.0",
-  "description": "A TypeScript library for coordinating communication between multiple agents using the Model Context Protocol (MCP)",
+  "description": "A TypeScript implementation of a Message Communication Protocol (MCP) for coordinating autonomous agents via TCP-based message queue",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
@@ -17,10 +22,13 @@
     "communication",
     "coordination",
     "typescript",
-    "distributed"
+    "distributed",
+    "tcp",
+    "message-queue",
+    "autonomous-agents"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Nicholas Bardy",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nbardy/mcp-agent-communication.git"
@@ -30,6 +38,9 @@
   },
   "homepage": "https://github.com/nbardy/mcp-agent-communication#readme",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "@types/node": "^24.0.4",
     "ts-node": "^10.9.2",

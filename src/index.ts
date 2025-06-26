@@ -1,4 +1,5 @@
-export { startServer } from './server';
+// Main exports for the MCP Agent Communication library
 export { MCPClient } from './client';
-export * from './types';
-export { handlePut, handleList, handleRead, handleGather, dispatch } from './bank'; 
+export { startServer } from './server';
+export { dispatch, handlePut, handleList, handleRead, handleGather } from './bank';
+export * from './types'; 
