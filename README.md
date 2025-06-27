@@ -1,301 +1,198 @@
-# MCP Agent Communication Server
+# MCP Agent Communication 🤖✨
 
-An MCP (Model Context Protocol) server that enables agent communication and message coordination through Claude Desktop and other MCP-compatible clients.
+> **We don't need an agent framework!** Claude Code already has sub-agents and it works damn well.
+> 
+> **We just need a way for them to coordinate!** A simple MCP server that lets your sub-agents talk to each other.
 
-## Installation
+**Coordinate autonomous agent swarms with blocking and non-blocking message queues**
+
+## 🚀 Quick Start: Launch an Agent Development Team
+
+Imagine deploying a complete development team of autonomous agents to build a new user authentication feature. Here's how you'd coordinate them:
+
+```bash
+# One-liner install and launch
+npx mcp-agent-communication
+
+# In your LLM interface (Claude, etc), create your agent swarm:
+```
+
+**Agent Coordination Prompt:**
+```
+Launch 5 sub agents that use mcp-agent-communication to coordinate
+
+🔧 **Alice** (Frontend Engineer): Build React login/signup components
+🔧 **Bob** (Backend Engineer): Implement JWT auth API endpoints  
+🔧 **Carol** (DevOps Engineer): Set up database schema & deployment
+👔 **David** (PM): Coordinate milestones and handle blockers
+🎯 **Eve** (CTO): Make architectural decisions and final approvals
+
+**Communication Protocol:**
+- Use `put` for status updates and progress reports
+- Use `put-blocking` when you need approval or review before proceeding
+- Use `take-blocking` to wait for specific deliverables from other agents
+- Use `peek` to check team progress without consuming messages
+- Use `check-pending` to see what's blocking the team
+
+**Workflow:**
+1. David (PM) kicks off by putting the feature requirements
+2. Eve (CTO) reviews and puts architectural decisions
+3. Engineers take their assignments and work in parallel
+4. Engineers use put-blocking for code reviews
+5. Everyone coordinates on deployment timing
+
+Start by having David put the initial project kickoff message with tag "kickoff".
+```
+
+## 🎯 Why This Matters
+
+Traditional agent orchestration requires complex state management and rigid workflows. **MCP Agent Communication** lets autonomous agents coordinate naturally through a shared message queue - just like human teams use Slack, but designed for AI agents.
+
+**Perfect for:**
+- 🏗️ **Multi-agent development teams** building software features
+- 🔄 **Autonomous workflow coordination** across specialized agents  
+- 📊 **Complex data processing pipelines** with interdependent steps
+- 🎮 **Game AI coordination** between multiple NPC agents
+- 🏭 **Industrial automation** with multiple autonomous systems
+
+## ⚡ Core Operations
+
+| Operation | Behavior | Use When |
+|-----------|----------|----------|
+| `put` | Send message, continue immediately | Broadcast status updates, fire-and-forget |
+| `put-blocking` | Send message, wait for response | Need approval/review before proceeding |
+| `take` | Grab message if available, don't wait | Check for work items non-blocking |
+| `take-blocking` | Wait for specific message to arrive | Wait for deliverables from other agents |
+| `peek` | View messages without consuming | Monitor team progress |
+| `check-pending` | See what requests are waiting | Debug coordination bottlenecks |
+
+## 🔥 Real-World Patterns
+
+### Request-Response Coordination
+```javascript
+// Agent requests code review and waits
+const review = await dispatch({
+  verb: "put-blocking",
+  description: "React auth component ready for review",
+  agent_id: "alice", 
+  tags: ["review", "frontend"],
+  content: { files: ["Login.tsx", "Signup.tsx"], pr: "PR-123" },
+  timeout: 300  // 5 minute timeout
+});
+
+// Senior engineer provides review
+await dispatch({
+  verb: "put",
+  description: "Code review complete", 
+  agent_id: "eve",
+  tags: ["review", "approved"],
+  content: { status: "LGTM", suggestions: ["Add loading states"] }
+});
+```
+
+### Pipeline Coordination
+```javascript
+// Backend engineer waits for database schema
+const schema = await dispatch({
+  verb: "take-blocking",
+  agent_ids: ["carol"],  // Only from DevOps
+  tags: ["database", "schema"],
+  timeout: 600
+});
+
+// Now implement API endpoints using the schema
+await dispatch({
+  verb: "put",
+  description: "Auth API endpoints implemented",
+  agent_id: "bob",
+  tags: ["backend", "complete"],
+  content: { endpoints: ["/login", "/register", "/refresh"] }
+});
+```
+
+### Progress Monitoring
+```javascript
+// PM checks overall progress without disrupting work
+const progress = await dispatch({
+  verb: "peek",
+  tags: ["complete", "blocked", "in-progress"]
+});
+
+// Check what's causing delays
+const blockers = await dispatch({
+  verb: "check-pending"
+});
+```
+
+## 🛠️ Installation & Setup
 
 ```bash
 npm install mcp-agent-communication
-```
 
-## Overview
+# Run the demo to see it in action
+npm run demo
 
-This MCP server provides a communication layer for autonomous agents to coordinate work, share progress updates, and synchronize workflows. It exposes your agent communication functionality as standard MCP tools that can be used directly in Claude Desktop.
-
-## Quick Start
-
-### As an MCP Server for Claude Desktop
-
-1. Install and build:
-```bash
-npm install
+# Or use as MCP server with Claude Desktop
 npm run build
+# Add to your MCP config: node /path/to/dist/mcp-server.js
 ```
 
-2. Add to your Claude Desktop MCP settings:
-```json
+## 📡 Message Format
+
+Every message includes rich metadata for smart filtering:
+
+```typescript
 {
-  "mcpServers": {
-    "mcp-agent-communication": {
-      "command": "node",
-      "args": ["/full/path/to/mcp-agent-communication/dist/mcp-server.js"]
-    }
+  id: "uuid-v4",           // Unique message ID
+  ts: 1640995200000,       // Server timestamp  
+  description: "Auth API ready",
+  agent_id: "bob",         // Who sent it
+  tags: ["backend", "api", "complete"],  // Categorization
+  content: {               // Your payload
+    endpoints: ["/login", "/register"],
+    database: "postgres://...",
+    tests_passing: true
   }
 }
 ```
 
-3. Restart Claude Desktop
+## 🏗️ Architecture
 
-### As a Development Tool
+- **In-Memory Queue**: Fast message storage with event-driven notifications
+- **Blocking Coordination**: Agents can wait for specific messages with timeouts  
+- **Filter System**: Route messages by agent ID, tags, or custom criteria
+- **MCP Protocol**: Standard interface works with Claude Desktop and other LLM tools
+- **TypeScript**: Full type safety for message contracts
 
-```bash
-npm install
-npx tsx src/demo.ts  # Run the original TCP-based demo
-```
+## 🎮 Advanced Usage
 
-## MCP Tools Available
+**Custom Coordination Patterns:**
+- **Leader Election**: Agents compete for coordinator role
+- **Consensus Building**: Wait for majority agreement before proceeding  
+- **Circuit Breakers**: Timeout and fallback when agents are unresponsive
+- **Resource Pooling**: Coordinate access to shared systems/APIs
+- **Hierarchical Workflows**: Parent agents managing sub-agent teams
 
-Once configured, you'll have access to these tools in Claude:
+**Scaling Options:**
+- Replace in-memory storage with Redis/PostgreSQL
+- Add message persistence and replay capabilities
+- Implement message routing across multiple servers
+- Add authentication and agent identity verification
 
-### `put_message`
-Store a message in the agent communication bank
-- **description**: Human-readable description
-- **agent_id**: ID of the agent sending the message  
-- **tags**: Array of tags for categorizing
-- **content**: The message content (any type)
+## 🤝 Contributing
 
-### `list_messages`
-List messages from the communication bank
-- **agent_ids** (optional): Filter by specific agent IDs
-- **tags** (optional): Filter by specific tags
-
-### `read_messages`
-Read messages since a timestamp
-- **agent_ids** (optional): Filter by specific agent IDs
-- **tags** (optional): Filter by specific tags
-- **since** (optional): Timestamp to read messages since (epoch ms)
-
-### `gather_messages`
-Wait for specific messages from specific agents
-- **agent_ids**: Required agent IDs to wait for
-- **tags**: Required tags to wait for
-- **timeout** (optional): Timeout in seconds (default: 10)
-
-## Communication Patterns
-
-### How Agents Communicate
-
-**Engineers** should:
-- Put frequent progress updates using `put_message`
-- Use descriptive tags like `"start"`, `"update"`, `"finish"`, `"blocked"`
-- Include relevant work artifacts in the `content` field
-- Use `gather_messages` to wait for PM feedback
-
-**Project Managers** should:
-- Use `gather_messages` to wait for engineer milestones
-- Provide timely feedback using `put_message` with `"review"` tags
-- Monitor overall project progress with `list_messages` and `read_messages`
-
-### Example Usage in Claude
-
-```
-Put a start message:
-Tool: put_message
-- description: "Starting work on authentication feature"
-- agent_id: "alice"
-- tags: ["start"]
-- content: {"feature": "auth", "estimated_hours": 8}
-
-Wait for completion from multiple agents:
-Tool: gather_messages
-- agent_ids: ["alice", "bob", "carol"]
-- tags: ["finish"]
-- timeout: 300
-
-List recent updates:
-Tool: read_messages
-- tags: ["update"]
-- since: 1640995200000
-```
-
-## Legacy TCP Protocol
-
-The original TCP-based protocol is still available for backwards compatibility:
-
-## Architecture
-
-- **Message Store**: In-memory message queue with event-driven notifications
-- **TCP Server**: JSON-line protocol over raw TCP (port 4545)
-- **Client Library**: Lightweight wrapper for agent communication
-- **Demo**: Complete example with 3 engineers + 1 PM
-
-## MCP Protocol
-
-### Connection
-Connect to the MCP server via TCP socket at `HOST:PORT` (default localhost:4545).
-Send one JSON object per line.
-
-### Verbs
-
-#### `put!` - Store a message
-```json
-{
-  "verb": "put!",
-  "description": "human-readable description",
-  "agent_id": "your-agent-id",
-  "tags": ["tag1", "tag2"],
-  "content": { "any": "data" }
-}
-```
-**Response**: `{"ok": true, "id": "uuid"}`
-
-#### `list` - Query existing messages
-```json
-{
-  "verb": "list",
-  "agent_ids": ["alice", "bob"],  // optional filter
-  "tags": ["finish"]              // optional filter
-}
-```
-**Response**: `{"messages": [...]}`
-
-#### `read!` - Get messages since timestamp
-```json
-{
-  "verb": "read!",
-  "agent_ids": ["alice"],         // optional filter
-  "tags": ["update"],             // optional filter
-  "since": 1640995200000          // epoch-ms, optional
-}
-```
-**Response**: `{"messages": [...]}`
-
-#### `gather!` - Wait for messages (blocking)
-```json
-{
-  "verb": "gather!",
-  "agent_ids": ["alice", "bob", "carol"],  // required
-  "tags": ["finish"],                      // required
-  "timeout": 10                            // seconds, default 10
-}
-```
-**Response**: 
-- `{"completed": [["alice","finish"], ...], "partial": false, "messages": [...]}`
-- `{"completed": [...], "partial": true, "messages": [...]}` (if timeout)
-
-## Communication Patterns
-
-### How to Communicate
-
-**Engineers** should:
-- Put frequent progress updates on the message queue using `put!`
-- Use descriptive tags like `"start"`, `"update"`, `"finish"`, `"blocked"`
-- Include relevant work artifacts in the `content` field
-- Listen for PM feedback using `gather!` on their own agent ID
-
-**Project Managers** should:
-- Use `gather!` to wait for engineer milestones
-- Provide timely feedback using `put!` with `"review"` tags
-- Monitor overall project progress with `list` and `read!`
-
-### Typical Engineer Workflow
-
-```json
-// 1. Signal work start
-{"verb": "put!", "description": "begin feature X", "agent_id": "alice", "tags": ["start"], "content": {}}
-
-// 2. Share progress updates
-{"verb": "put!", "description": "API design complete", "agent_id": "alice", "tags": ["update"], "content": {"design": "..."}}
-
-// 3. Mark completion
-{"verb": "put!", "description": "feature X complete with tests", "agent_id": "alice", "tags": ["finish"], "content": {"pr": "https://github.com/..."}}
-
-// 4. Wait for review
-{"verb": "gather!", "agent_ids": ["alice"], "tags": ["review"], "timeout": 30}
-
-// 5. Respond to feedback if needed
-{"verb": "put!", "description": "addressed review comments", "agent_id": "alice", "tags": ["update"], "content": {}}
-```
-
-### Typical PM Workflow
-
-```json
-// 1. Wait for all engineers to start
-{"verb": "gather!", "agent_ids": ["alice", "bob", "carol"], "tags": ["start"], "timeout": 10}
-
-// 2. Monitor for completions
-{"verb": "gather!", "agent_ids": ["alice", "bob", "carol"], "tags": ["finish"], "timeout": 60}
-
-// 3. Provide reviews
-{"verb": "put!", "description": "LGTM - good work!", "agent_id": "alice", "tags": ["review"], "content": {"approved": true}}
-```
-
-## Agent Instructions
-
-You are an autonomous software engineer agent.
-
-### Mission
-Implement your assigned feature then mark it **finish** when done.
-
-### Communication
-Talk to the MCP server via a plain-text TCP socket at HOST:PORT (default 4545).
-Every line you send MUST be one JSON object containing:
-- `"verb"`: one of `"put!"`, `"list"`, `"gather!"`, `"read!"`
-- verb-specific fields (see protocol above)
-
-### Typical Workflow
-1. `put!` tag `"start"` when you begin
-2. Optionally `put!` `"update"` with progress and decisions
-3. `put!` tag `"finish"` when feature & tests pass
-4. `gather!` `"review"` from PM; react to feedback if needed
-
-### Example Session
-```bash
-# Connect to MCP server
-nc localhost 4545
-
-# Start work
-{"verb":"put!", "description":"implementing login API", "agent_id":"alice", "tags":["start"], "content":{}}
-
-# Progress update
-{"verb":"put!", "description":"database schema ready", "agent_id":"alice", "tags":["update"], "content":{"schema":"users table created"}}
-
-# Mark completion
-{"verb":"put!", "description":"login API complete with tests", "agent_id":"alice", "tags":["finish"], "content":{"pr":"https://git/alice/login-api"}}
-
-# Wait for review
-{"verb":"gather!", "agent_ids":["alice"], "tags":["review"], "timeout":30}
-```
-
-## Files
-
-- `src/types.ts` - Protocol interfaces and types
-- `src/bank.ts` - Message store and query logic
-- `src/server.ts` - TCP server implementation
-- `src/client.ts` - Client library for agents
-- `src/demo.ts` - Complete demo with engineers + PM
-- `tsconfig.json` - TypeScript configuration
-
-## Running the Demo
+This is infrastructure for the autonomous agent future. Pull requests welcome!
 
 ```bash
-npm install
-npx tsx src/demo.ts
+git clone https://github.com/nbardy/mcp-agent-communication
+cd mcp-agent-communication
+npm install && npm run demo
 ```
 
-You'll see output like:
-```
-MCP listening on 4545
-[alice] Starting work
-[bob] Starting work
-[carol] Starting work
-[PM] Waiting for all engineers to start
-[PM] All engineers started, waiting for all finishes
-[alice] Finished work after 1.50s
-[bob] Finished work after 2.53s
-[carol] Finished work after 2.67s
-[PM] Reviewing alice
-[PM] Reviewing bob
-[PM] Reviewing carol
-[PM] Done reviewing
-```
+## 📄 License
 
-## Extending
+MIT - Build the future of agent coordination freely.
 
-- **Persistence**: Replace the in-memory `messages` array with a database
-- **Scaling**: Stream events to Kafka or Redis for distributed coordination  
-- **Transport**: Swap TCP for HTTP, WebSocket, or gRPC by changing only `server.ts`
-- **Security**: Add authentication and message encryption
-- **UI**: Build a web dashboard to monitor agent communications
+---
 
-The protocol is transport-agnostic and designed for easy extension to real LLM agents or any process that can send JSON over a socket. 
+**Ready to coordinate your agent swarm?** `npm install mcp-agent-communication` and start building! 🚀 

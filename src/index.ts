@@ -1,5 +1,15 @@
-// Main exports for the MCP Agent Communication library
-export { MCPClient } from './client';
-export { startServer } from './server';
-export { dispatch, handlePut, handleList, handleRead, handleGather } from './bank';
-export * from './types'; 
+// Export main API
+export { dispatch } from './bank.js';
+
+// Export individual handlers for advanced usage
+export { 
+  handleTake, 
+  handleTakeBlocking, 
+  handlePut, 
+  handlePutBlocking, 
+  handlePeek, 
+  handleCheckPending 
+} from './bank.js';
+
+// Export types
+export * from './types.js'; 

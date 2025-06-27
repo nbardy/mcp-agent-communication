@@ -1,5 +1,5 @@
-// Simple "verbs" our DSL supports
-export type Verb = 'put!' | 'list' | 'read!' | 'gather!';
+// New API verbs for agent communication
+export type Verb = 'take' | 'take-blocking' | 'put' | 'put-blocking' | 'peek' | 'check-pending';
 
 export interface Message {
   id: string;                 // UUID v4
@@ -10,40 +10,67 @@ export interface Message {
   content: unknown;
 }
 
+export interface PendingRequest {
+  id: string;                 // UUID v4
+  ts: number;                 // epoch‑ms when request was made
+  agent_id: string;
+  tags: string[];
+  timeout: number;            // timeout in seconds
+  resolve: (response: any) => void;
+  reject: (error: Error) => void;
+}
+
 // ---------------- Requests ----------------
+
+export interface TakeReq {
+  verb: 'take';
+  agent_ids?: string[];       // Filter by specific agents (optional)
+  tags?: string[];            // Filter by specific tags (optional)
+}
+
+export interface TakeBlockingReq {
+  verb: 'take-blocking';
+  agent_ids?: string[];       // Filter by specific agents (optional)
+  tags?: string[];            // Filter by specific tags (optional)
+  timeout?: number;           // seconds (default 30)
+}
+
 export interface PutReq {
-  verb: 'put!';
+  verb: 'put';
   description: string;
   agent_id: string;
   tags: string[];
   content: unknown;
 }
 
-export interface ListReq {
-  verb: 'list';
-  agent_ids?: string[];
-  tags?: string[];
-}
-
-export interface ReadReq {
-  verb: 'read!';
-  agent_ids?: string[];
-  tags?: string[];
-  since?: number;             // epoch‑ms
-}
-
-export interface GatherReq {
-  verb: 'gather!';
-  agent_ids: string[];
+export interface PutBlockingReq {
+  verb: 'put-blocking';
+  description: string;
+  agent_id: string;
   tags: string[];
-  timeout?: number;           // seconds (default 10)
+  content: unknown;
+  timeout?: number;           // seconds (default 30)
 }
 
-export type Request = PutReq | ListReq | ReadReq | GatherReq;
+export interface PeekReq {
+  verb: 'peek';
+  agent_ids?: string[];       // Filter by specific agents (optional)
+  tags?: string[];            // Filter by specific tags (optional)
+}
+
+export interface CheckPendingReq {
+  verb: 'check-pending';
+  agent_id?: string;          // Check pending for specific agent (optional)
+}
+
+export type Request = TakeReq | TakeBlockingReq | PutReq | PutBlockingReq | PeekReq | CheckPendingReq;
 
 // ---------------- Responses ---------------
 export type Resp =
-  | { ok: true; id: string }                                  // put!
-  | { messages: Message[] }                                   // list/read!
-  | { completed: string[][]; partial: boolean; messages: Message[] } // gather!
+  | { ok: true; message?: Message }                          // take (message if found)
+  | { ok: true; message: Message }                           // take-blocking (always has message)
+  | { ok: true; id: string }                                 // put
+  | { ok: true; id: string; response?: Message }             // put-blocking (response if received)
+  | { messages: Message[] }                                  // peek
+  | { pending: Array<{id: string; agent_id: string; tags: string[]; ts: number}> } // check-pending
   | { error: string }; 
