@@ -28,11 +28,11 @@ Launch 5 sub agents that use mcp-agent-communication to coordinate
 🎯 **Eve** (CTO): Make architectural decisions and final approvals
 
 **Communication Protocol:**
-- Use `put` for status updates and progress reports
-- Use `put-blocking` when you need approval or review before proceeding
-- Use `take-blocking` to wait for specific deliverables from other agents
-- Use `peek` to check team progress without consuming messages
-- Use `check-pending` to see what's blocking the team
+- Use `send_message` for status updates and progress reports
+- Use `send_message_and_wait_for_response` when you need approval or review before proceeding
+- Use `wait_for_message` to wait for specific deliverables from other agents
+- Use `check_messages` to check team progress without consuming messages
+- Use `check_waiting_requests` to see what's blocking the team
 
 **Workflow:**
 1. David (PM) kicks off by putting the feature requirements
@@ -57,22 +57,48 @@ Traditional agent orchestration requires complex state management and rigid work
 
 ## ⚡ Core Operations
 
-| Operation | Behavior | Use When |
-|-----------|----------|----------|
-| `put` | Send message, continue immediately | Broadcast status updates, fire-and-forget |
-| `put-blocking` | Send message, wait for response | Need approval/review before proceeding |
-| `take` | Grab message if available, don't wait | Check for work items non-blocking |
-| `take-blocking` | Wait for specific message to arrive | Wait for deliverables from other agents |
-| `peek` | View messages without consuming | Monitor team progress |
-| `check-pending` | See what requests are waiting | Debug coordination bottlenecks |
+| Human-Readable Tool | Technical Verb | Behavior | Use When |
+|-------------------|---------------|----------|----------|
+| `send_message` | `put` | Send message, continue immediately | Broadcast status updates, fire-and-forget |
+| `send_message_and_wait_for_response` | `put-blocking` | Send message, wait for response | Need approval/review before proceeding |
+| `receive_message` | `take` | Grab message if available, don't wait | Check for work items non-blocking |
+| `wait_for_message` | `take-blocking` | Wait for specific message to arrive | Wait for deliverables from other agents |
+| `check_messages` | `peek` | View messages without consuming | Monitor team progress |
+| `check_waiting_requests` | `check-pending` | See what requests are waiting | Debug coordination bottlenecks |
+
+### 🎯 Agent Type Examples
+
+**Development Teams:**
+- **Frontend Engineer**: Use `wait_for_message` to wait for API specs from backend team
+- **Backend Engineer**: Use `send_message_and_wait_for_response` to request database schema review
+- **DevOps Engineer**: Use `send_message` to announce deployment window
+- **Project Manager**: Use `check_messages` to monitor team progress
+- **Tech Lead**: Use `check_waiting_requests` to identify development bottlenecks
+
+**Content Creation:**
+- **Writer**: Use `send_message_and_wait_for_response` to submit article for editorial approval
+- **Editor**: Use `receive_message` to check for new submissions
+- **Designer**: Use `wait_for_message` to wait for content brief before creating visuals
+- **Publisher**: Use `check_messages` to see approved content ready for publication
+
+**Research Teams:**
+- **Researcher**: Use `send_message` to share preliminary findings
+- **Data Analyst**: Use `wait_for_message` to wait for cleaned dataset
+- **Peer Reviewer**: Use `receive_message` to check for papers needing review
+- **Principal Investigator**: Use `check_waiting_requests` to see what research needs approval
+
+**Business Operations:**
+- **Sales Rep**: Use `send_message_and_wait_for_response` to request pricing approval
+- **Marketing**: Use `send_message` to announce campaign launch
+- **Support Agent**: Use `receive_message` to check for new customer tickets
+- **Manager**: Use `check_messages` to monitor departmental communications
 
 ## 🔥 Real-World Patterns
 
 ### Request-Response Coordination
 ```javascript
-// Agent requests code review and waits
-const review = await dispatch({
-  verb: "put-blocking",
+// Agent requests code review and waits (using MCP tool)
+const review = await send_message_and_wait_for_response({
   description: "React auth component ready for review",
   agent_id: "alice", 
   tags: ["review", "frontend"],
@@ -81,8 +107,7 @@ const review = await dispatch({
 });
 
 // Senior engineer provides review
-await dispatch({
-  verb: "put",
+await send_message({
   description: "Code review complete", 
   agent_id: "eve",
   tags: ["review", "approved"],
@@ -93,16 +118,14 @@ await dispatch({
 ### Pipeline Coordination
 ```javascript
 // Backend engineer waits for database schema
-const schema = await dispatch({
-  verb: "take-blocking",
+const schema = await wait_for_message({
   agent_ids: ["carol"],  // Only from DevOps
   tags: ["database", "schema"],
   timeout: 600
 });
 
 // Now implement API endpoints using the schema
-await dispatch({
-  verb: "put",
+await send_message({
   description: "Auth API endpoints implemented",
   agent_id: "bob",
   tags: ["backend", "complete"],
@@ -113,15 +136,12 @@ await dispatch({
 ### Progress Monitoring
 ```javascript
 // PM checks overall progress without disrupting work
-const progress = await dispatch({
-  verb: "peek",
+const progress = await check_messages({
   tags: ["complete", "blocked", "in-progress"]
 });
 
 // Check what's causing delays
-const blockers = await dispatch({
-  verb: "check-pending"
-});
+const blockers = await check_waiting_requests();
 ```
 
 ## 🛠️ Installation & Setup
