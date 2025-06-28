@@ -1,6 +1,6 @@
 {
   "name": "mcp-agent-communication",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "An MCP (Model Context Protocol) server for agent communication and message coordination",
   "main": "dist/mcp-server.js",
   "types": "dist/index.d.ts",
